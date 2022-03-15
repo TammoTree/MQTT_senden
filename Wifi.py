@@ -30,9 +30,29 @@ if not wlan.isconnected():              #Wenn Wlan nicht verbunden ist ->
 
     print("Netzwerkkonfiguration: ", wlan.ifconfig())   #Netzwerkinfos ausgeben (IP Adresse, Subnetzmaske, Gateway, DNS-Server)
 
+led_gruen = Pin(17, Pin.OUT)
+taster = Pin(15, Pin.IN)
+
+was_off_before = True
+led_on = False
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
 while True:
+    eingang = taster.value()
+    if eingang and was_off_before:
+        led_on = not led_on
+        was_off_before = False
+    if not eingang:
+        was_off_before = True
+    if led_on:
+        led_gruen.on()
+    else:
+        led_gruen.off()
+
+    led_ein = led_on
+
+    mqtt_Baum = MQTTClient(CLIENT_ID, MQTT_SERVER)
+    mqtt_Baum.connect()
 
     temperatur_HTU = int(htu.temperature)
     luftfeuchtigkeit_HTU = int(htu.humidity)
@@ -46,7 +66,8 @@ while True:
             {
                 "Temperatur": temperatur_HTU,
                 "Luftfeuchtigkeit": luftfeuchtigkeit_HTU,
-                "Helligkeit": helligkeit_BH
+                "Helligkeit": helligkeit_BH,
+                "Anzeige": led_ein
             }
         ]    
     }
